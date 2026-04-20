@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>稟議書プロンプト作成ツール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface2: #faf9f6;
+    --border: #e2ddd5;
+    --border2: #ccc8be;
+    --text: #1a1916;
+    --text2: #5c5a54;
+    --text3: #9c9a93;
+    --accent: #2d5a3d;
+    --accent-light: #e8f2eb;
+    --accent2: #8b6914;
+    --accent2-light: #fdf4dc;
+    --danger: #8b2020;
+    --danger-light: #fdf0f0;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; fill: white; }
+
+  .header-note {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .panel-icon.green { background: var(--accent-light); }
+  .panel-icon.gold  { background: var(--accent2-light); }
+
+  .panel-title {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.03em;
+  }
+
+  .panel-body { padding: 1.25rem 1.5rem; }
+
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 5px;
+    letter-spacing: 0.02em;
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235c5a54' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  select:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,90,61,0.1);
+  }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.1rem 0;
+  }
+
+  .style-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .style-opt {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+
+  .style-opt:hover { border-color: var(--accent); background: var(--accent-light); }
+
+  .style-opt.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .style-opt input { display: none; }
+
+  .style-opt-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    display: block;
+  }
+
+  .style-opt.active .style-opt-label { color: var(--accent); }
+
+  .style-opt-sub {
+    font-size: 10px;
+    color: var(--text3);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 1.1rem;
+  }
+
+  .btn-generate:hover { background: #244d34; }
+  .btn-generate:active { transform: scale(0.98); }
+
+  .output-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    font-size: 12.5px;
+    line-height: 1.85;
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 200px;
+    max-height: 520px;
+    overflow-y: auto;
+    word-break: break-all;
+  }
+
+  .output-placeholder {
+    color: var(--text3);
+    font-size: 13px;
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .btn-copy, .btn-reset {
+    flex: 1;
+    padding: 9px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .btn-copy {
+    background: var(--accent2-light);
+    border: 1px solid #d4b86a;
+    color: var(--accent2);
+  }
+  .btn-copy:hover { background: #faecc0; }
+
+  .btn-reset {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .btn-reset:hover { background: var(--bg); }
+
+  .copy-success {
+    display: none;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .usage-tip {
+    background: var(--accent2-light);
+    border: 1px solid #e0c97a;
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  .type-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .section-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+
+  .dynamic-fields { margin-top: 0; }
+
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; padding: 1.5rem 1rem 3rem; }
+    .row2 { grid-template-columns: 1fr; }
+    .style-options { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z"/></svg>
+    </div>
+    稟議書プロンプト作成ツール
+  </div>
+  <span class="header-note">書店複合店グループ向け</span>
+</header>
+
+<main>
+
+  <!-- 左：入力パネル -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon green">📋</div>
+      <div>
+        <div class="panel-title">申請内容を入力</div>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="field">
+        <label>稟議の種類</label>
+        <select id="ringiType" onchange="onTypeChange()">
+          <option value="">選択してください</option>
+          <optgroup label="設備・什器・備品">
+            <option value="equipment">備品購入申請（消耗品・小物）</option>
+            <option value="fixture">什器・陳列棚購入申請</option>
+            <option value="facility">設備投資申請（大型・リース含む）</option>
+            <option value="it">IT機器・システム導入申請</option>
+          </optgroup>
+          <optgroup label="店舗・事業">
+            <option value="newbiz">新規事業・新フロア転換申請</option>
+            <option value="renovation">店舗改装・レイアウト変更申請</option>
+            <option value="vendor">新規取引先・仕入先契約申請</option>
+            <option value="campaign">販売促進・キャンペーン実施申請</option>
+          </optgroup>
+          <optgroup label="人事・組織">
+            <option value="hire">採用・増員申請</option>
+            <option value="transfer">異動・役職変更申請</option>
+            <option value="training">研修・セミナー参加申請</option>
+          </optgroup>
+          <optgroup label="契約・財務">
+            <option value="contract">契約締結申請</option>
+            <option value="budget">予算外支出申請</option>
+            <option value="disposal">資産廃棄・除却申請</option>
+          </optgroup>
+          <optgroup label="その他">
+            <option value="other">その他・汎用</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div id="dynamicFields" class="dynamic-fields"></div>
+
+      <div class="divider"></div>
+
+      <div class="row2">
+        <div class="field">
+          <label>申請者名</label>
+          <input type="text" id="applicant" placeholder="例：古賀 太郎">
+        </div>
+        <div class="field">
+          <label>店舗・部署</label>
+          <input type="text" id="store" placeholder="例：みづま店">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>出力スタイル</label>
+        <div class="style-options">
+          <label class="style-opt active" onclick="setStyle('standard', this)">
+            <input type="radio" name="style" value="standard" checked>
+            <span class="style-opt-label">標準</span>
+            <span class="style-opt-sub">表形式＋本文</span>
+          </label>
+          <label class="style-opt" onclick="setStyle('simple', this)">
+            <input type="radio" name="style" value="simple">
+            <span class="style-opt-label">シンプル</span>
+            <span class="style-opt-sub">箇条書き中心</span>
+          </label>
+          <label class="style-opt" onclick="setStyle('formal', this)">
+            <input type="radio" name="style" value="formal">
+            <span class="style-opt-label">フォーマル</span>
+            <span class="style-opt-sub">役員決裁向け</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-generate" onclick="generatePrompt()">プロンプトを生成する</button>
+
+    </div>
+  </div>
+
+  <!-- 右：出力パネル -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon gold">✨</div>
+      <div>
+        <div class="panel-title">生成されたプロンプト</div>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="output-area" id="outputBox">
+        <div class="output-placeholder">← 左のフォームで稟議の種類を選び<br>「プロンプトを生成する」を押してください</div>
+      </div>
+
+      <div class="output-actions">
+        <button class="btn-copy" onclick="copyPrompt()">📋 コピーする</button>
+        <button class="btn-reset" onclick="resetOutput()">リセット</button>
+      </div>
+
+      <div class="copy-success" id="copySuccess">✅ クリップボードにコピーしました</div>
+
+      <div class="usage-tip">
+        💡 コピーしたプロンプトを <strong>Claude・ChatGPT・Gemini</strong> など任意のAIに貼り付けると、稟議書の下書きが生成されます。
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+const typeConfig = {
+  equipment: { label:'備品購入申請', fields:[
+    {id:'item', label:'購入品目・品名', placeholder:'例：レジ用スキャナー、梱包テープ台 等'},
+    {id:'qty', label:'数量・単価（目安）', placeholder:'例：2台 / 1台あたり約15,000円'},
+    {id:'reason', label:'購入理由・必要性', placeholder:'例：現行機器が故障しており業務に支障が出ている'},
+  ]},
+  fixture: { label:'什器・陳列棚購入申請', fields:[
+    {id:'item', label:'什器・棚の種類', placeholder:'例：コミック用平台什器、ゴンドラ什器'},
+    {id:'qty', label:'数量・概算金額', placeholder:'例：4台 / 合計約200,000円'},
+    {id:'reason', label:'導入目的', placeholder:'例：新刊フェア展開のため展示スペースを拡充'},
+    {id:'place', label:'設置場所・対象店舗', placeholder:'例：みづま店1F 雑誌コーナー'},
+  ]},
+  facility: { label:'設備投資申請', fields:[
+    {id:'item', label:'設備名・システム名', placeholder:'例：エアコン更新、防犯カメラシステム'},
+    {id:'amount', label:'概算金額', placeholder:'例：約1,500,000円（リース月額35,000円×48回）'},
+    {id:'reason', label:'投資理由・期待効果', placeholder:'例：現行設備が耐用年数超過。省エネ型への更新でランニングコスト削減見込み'},
+    {id:'place', label:'対象店舗・場所', placeholder:'例：あらお店 全フロア'},
+  ]},
+  it: { label:'IT機器・システム導入申請', fields:[
+    {id:'item', label:'機器・システム名', placeholder:'例：POSレジ更新、在庫管理システム導入'},
+    {id:'amount', label:'概算金額・契約形態', placeholder:'例：初期費用300,000円 ＋ 月額SaaS費用50,000円'},
+    {id:'reason', label:'導入目的・業務改善効果', placeholder:'例：在庫の二重管理解消、EC在庫連携の自動化'},
+    {id:'vendor', label:'ベンダー・製品名（候補）', placeholder:'例：○○株式会社「△△クラウドPOS」'},
+  ]},
+  newbiz: { label:'新規事業・フロア転換申請', fields:[
+    {id:'item', label:'事業・フロア転換の内容', placeholder:'例：DVDレンタルフロアをクレーンゲーム専門店に転換'},
+    {id:'amount', label:'初期投資概算', placeholder:'例：什器撤去・内装費 約500,000円'},
+    {id:'reason', label:'転換理由・市場背景', placeholder:'例：DVDレンタル売上の継続的な減少、アミューズメント需要の増加'},
+    {id:'effect', label:'期待効果・収益計画', placeholder:'例：月次売上目標 XXX万円、ROI〇ヶ月で回収見込み'},
+  ]},
+  renovation: { label:'店舗改装・レイアウト変更申請', fields:[
+    {id:'item', label:'改装・変更内容', placeholder:'例：レジカウンター移設、入口付近のレイアウト変更'},
+    {id:'amount', label:'工事費用概算', placeholder:'例：約800,000円（外注施工）'},
+    {id:'reason', label:'改装理由・目的', placeholder:'例：顧客動線の改善、万引き抑止強化'},
+    {id:'place', label:'対象店舗', placeholder:'例：やまが店'},
+  ]},
+  vendor: { label:'新規取引先・仕入先契約申請', fields:[
+    {id:'item', label:'取引先・商品カテゴリ', placeholder:'例：ブランドリユース品仕入先「○○商事」'},
+    {id:'amount', label:'取引規模・契約条件', placeholder:'例：月間仕入上限300万円、支払サイト翌月末'},
+    {id:'reason', label:'選定理由・事業上の意義', placeholder:'例：Kingram向け高単価商品の安定調達ルート確保'},
+    {id:'risk', label:'リスクと対策', placeholder:'例：未上場業者のため与信調査実施済み。取引上限を設定してリスク管理'},
+  ]},
+  campaign: { label:'販売促進・キャンペーン実施申請', fields:[
+    {id:'item', label:'キャンペーン名・内容', placeholder:'例：夏の読書フェア ポイント3倍キャンペーン'},
+    {id:'amount', label:'実施費用・割引原資', placeholder:'例：販促費 約150,000円（チラシ・POPデザイン含む）'},
+    {id:'period', label:'実施期間・対象店舗', placeholder:'例：7月1日〜8月31日 / 3店舗共通'},
+    {id:'effect', label:'目標・期待効果', placeholder:'例：来客数前年比110%、期間中売上目標 XXX万円'},
+  ]},
+  hire: { label:'採用・増員申請', fields:[
+    {id:'item', label:'採用職種・雇用形態', placeholder:'例：書籍担当パートスタッフ 2名（週3日）'},
+    {id:'amount', label:'人件費概算', placeholder:'例：時給1,050円×月80h×2名 ＝ 月約168,000円'},
+    {id:'reason', label:'増員理由', placeholder:'例：退職による欠員補充。現状シフトが恒常的に不足している'},
+    {id:'place', label:'配属先', placeholder:'例：みづま店 書籍部門'},
+  ]},
+  transfer: { label:'異動・役職変更申請', fields:[
+    {id:'item', label:'対象者・現職・異動後', placeholder:'例：翁 ○○（現：みづま店副店長 → あらお店長代行）'},
+    {id:'reason', label:'異動理由・背景', placeholder:'例：あらお店の管理強化のため'},
+    {id:'period', label:'発令予定日', placeholder:'例：2025年6月1日付'},
+  ]},
+  training: { label:'研修・セミナー参加申請', fields:[
+    {id:'item', label:'研修・セミナー名', placeholder:'例：中小企業診断士 実務補習、AI活用セミナー'},
+    {id:'amount', label:'費用', placeholder:'例：受講料 50,000円 ＋ 交通費 実費'},
+    {id:'reason', label:'参加目的・業務との関連', placeholder:'例：AI/DX推進プロジェクトのリーダーとしてスキル習得'},
+    {id:'who', label:'参加者', placeholder:'例：彌永 ○○（AI/DX推進PJ担当）'},
+  ]},
+  contract: { label:'契約締結申請', fields:[
+    {id:'item', label:'契約の種類・相手方', placeholder:'例：クレーンゲーム設置運営委託契約（ENOVA ENTERTAINMENT㈱）'},
+    {id:'amount', label:'契約金額・条件', placeholder:'例：売上歩合制 売上の40% / 契約期間2年間'},
+    {id:'reason', label:'締結理由・目的', placeholder:'例：DVDフロア転換に伴う新業態運営のため'},
+    {id:'risk', label:'主なリスクと対策', placeholder:'例：解約条件、独占禁止条項の有無を確認済み'},
+  ]},
+  budget: { label:'予算外支出申請', fields:[
+    {id:'item', label:'支出内容', placeholder:'例：緊急エアコン修理（予算外）'},
+    {id:'amount', label:'金額', placeholder:'例：予算計上なし / 支出額 320,000円'},
+    {id:'reason', label:'予算外となった理由・緊急性', placeholder:'例：猛暑による突然の故障で早急な修理が必要。顧客対応・食品管理への影響あり'},
+  ]},
+  disposal: { label:'資産廃棄・除却申請', fields:[
+    {id:'item', label:'廃棄資産の名称・管理番号', placeholder:'例：DVDレンタル在庫（棚卸済）、レンタル用什器一式'},
+    {id:'amount', label:'帳簿価額・廃棄損見込み', placeholder:'例：帳簿価額 ○○○千円 / 廃棄損 △△△千円'},
+    {id:'reason', label:'廃棄理由', placeholder:'例：業態転換に伴い全数廃棄。転売・返品不可品を含む'},
+    {id:'method', label:'廃棄方法・処理業者', placeholder:'例：産業廃棄物業者○○へ委託 / 一部は中古業者へ売却'},
+  ]},
+  other: { label:'汎用稟議', fields:[
+    {id:'item', label:'申請内容・件名', placeholder:'例：○○に関する件'},
+    {id:'amount', label:'金額・規模（該当する場合）', placeholder:'例：概算 ○○万円'},
+    {id:'reason', label:'申請理由・目的', placeholder:''},
+    {id:'effect', label:'期待される効果・メリット', placeholder:''},
+  ]},
+};
+
+let currentStyle = 'standard';
+
+function setStyle(val, el) {
+  currentStyle = val;
+  document.querySelectorAll('.style-opt').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function onTypeChange() {
+  const type = document.getElementById('ringiType').value;
+  const container = document.getElementById('dynamicFields');
+  if (!type || !typeConfig[type]) { container.innerHTML = ''; return; }
+  const cfg = typeConfig[type];
+  let html = `<div class="divider"></div><div style="margin-bottom:10px;"><span class="type-badge">${cfg.label}</span></div>`;
+  cfg.fields.forEach(f => {
+    html += `<div class="field"><label>${f.label}</label><input type="text" id="df_${f.id}" placeholder="${f.placeholder}"></div>`;
+  });
+  container.innerHTML = html;
+}
+
+const styleInstructions = {
+  standard: '表形式（件名・申請者・申請日・申請金額・申請内容・理由・期待効果・添付資料）と詳細本文を組み合わせた標準的な稟議書フォーマットで作成してください。',
+  simple: '箇条書き中心のシンプルな稟議書フォーマットで作成してください。読みやすさを優先し、簡潔にまとめてください。',
+  formal: '役員・取締役会決裁向けの格式ある稟議書で作成してください。3C分析・費用対効果・リスクと対策を含む詳細な内容にしてください。'
+};
+
+function generatePrompt() {
+  const type = document.getElementById('ringiType').value;
+  if (!type) {
+    alert('稟議の種類を選択してください。');
+    return;
+  }
+  const applicant = document.getElementById('applicant').value || '（申請者名）';
+  const store = document.getElementById('store').value || '（店舗・部署名）';
+  const cfg = typeConfig[type];
+  let details = '';
+  cfg.fields.forEach(f => {
+    const el = document.getElementById('df_' + f.id);
+    if (el && el.value.trim()) {
+      details += `\n・${f.label}：${el.value.trim()}`;
+    }
+  });
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+
+  const prompt = `# 稟議書作成依頼
+
+## 基本情報
+- 稟議の種類：${cfg.label}
+- 申請者：${applicant}
+- 申請部署・店舗：${store}
+- 申請日：${dateStr}
+- 業種：書店複合店グループ（書籍・コミック・CD・DVD・ゲーム・ブランドリユース等を扱う複合型小売業、熊本県内3店舗）
+
+## 申請内容の詳細${details || '\n・（詳細情報が入力されていません）'}
+
+## 出力形式の指示
+${styleInstructions[currentStyle]}
+
+## 作成ルール
+- 承認者（上長・役員）が判断しやすいよう、数字・根拠・比較を明記してください
+- 金額が不明な箇所は「○○○千円（要見積もり）」のように明示してください
+- 社内稟議書として読みやすい丁寧なビジネス文体で作成してください
+- 書店複合店グループ特有の業務・商習慣を踏まえた内容にしてください
+- 不足情報は「※要確認」として残し、完成度の高い下書きとして仕上げてください
+
+## 出力に含める項目
+件名 / 申請日 / 申請者・部署 / 申請金額 / 申請の背景と目的 / 具体的な申請内容 / 期待される効果 / リスクと対策（該当する場合）/ 添付書類リスト（該当する場合）/ 承認欄（担当・主任・店長・部長・役員）`;
+
+  const box = document.getElementById('outputBox');
+  box.innerHTML = '';
+  box.textContent = prompt;
+  document.getElementById('copySuccess').style.display = 'none';
+}
+
+function copyPrompt() {
+  const text = document.getElementById('outputBox').textContent;
+  if (!text || text.includes('左のフォーム')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('copySuccess');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 3000);
+  });
+}
+
+function resetOutput() {
+  document.getElementById('outputBox').innerHTML = '<div class="output-placeholder">← 左のフォームで稟議の種類を選び<br>「プロンプトを生成する」を押してください</div>';
+  document.getElementById('copySuccess').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
